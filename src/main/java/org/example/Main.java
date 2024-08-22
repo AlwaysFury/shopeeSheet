@@ -2,6 +2,9 @@ package org.example;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.poi.excel.ExcelReader;
+import cn.hutool.poi.excel.ExcelUtil;
+import org.apache.commons.compress.archivers.zip.X0017_StrongEncryptionHeader;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -9,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.imageio.ImageIO;
+import javax.lang.model.element.ElementKind;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -45,32 +49,56 @@ public class Main {
 
         try {
             // 创建一个Scanner对象，用于从控制台读取输入
-//            Scanner scanner = new Scanner(System.in);
-//
-//            System.out.print("输入第一个参数（示例：pu）：");
-//            tablePreName = scanner.nextLine();
-//            System.out.print("输入日期（示例：3.26）：");
-//            date = scanner.nextLine();
-//            System.out.print("输入起始表格序号：");
-//            inputTableIndex = Integer.valueOf(scanner.nextLine());
-//            System.out.print("输入源文件路径: ");
-//            String inputSourceExcelPath = scanner.nextLine();
-//            System.out.println("源文件路径============> "+inputSourceExcelPath);
-//            System.out.print("输入输出文件夹路径: ");
-//            staticOutputFilePath = scanner.nextLine();
-//            System.out.print("输入源图库路径: ");
-//            String inputSourceImgPath = scanner.nextLine();
-//            System.out.print("输入目标图库文件夹路径: ");
-//            staticTargetImgFilePath = scanner.nextLine();
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.print("输入第一个参数（示例：pu）：");
+            tablePreName = scanner.nextLine();
+            System.out.print("输入日期（示例：3.26）：");
+            date = scanner.nextLine();
+            System.out.print("输入起始表格序号：");
+            inputTableIndex = Integer.valueOf(scanner.nextLine());
+            System.out.print("输入源文件路径: ");
+            String inputSourceExcelPath = scanner.nextLine();
+            System.out.println("源文件路径============> "+inputSourceExcelPath);
+            System.out.print("输入输出文件夹路径: ");
+            staticOutputFilePath = scanner.nextLine();
+            System.out.print("输入源图库路径: ");
+            String inputSourceImgPath = scanner.nextLine();
+            System.out.print("输入目标图库文件夹路径: ");
+            staticTargetImgFilePath = scanner.nextLine();
+            System.out.print("输入颜色对应关系文件路径: ");
+            String inputColorPath = scanner.nextLine();
 
 
-        tablePreName = "pu";
-        date = "4.1";
-        inputTableIndex = 2;
-        String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/sh.xlsx";
-        staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
-        String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
-        staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
+//        tablePreName = "pu";
+//        date = "4.1";
+//        inputTableIndex = 2;
+//        String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/副本order_20240821163657944_938683.xlsx";
+//        staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
+//        String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
+//        staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
+//        String inputColorPath = "/Users/fury/workspace/business_project/生产/颜色对应关系.xlsx";
+
+        ExcelReader reader = ExcelUtil.getReader(inputColorPath);
+        List<Map<String, Object>> readAll = reader.readAll();
+        for (Map<String, Object> map : readAll) {
+            color2StrMap.put(map.get("原表").toString(), "\"" + map.get("需要呈现的语言").toString() + "\"");
+        }
+
+//        color2StrMap.put("White","\"白色/White/สีขาว/အဖြူ\"");
+//        color2StrMap.put("Rose Red","\"玫红色/Rose Red/กุหลาบแดง/အနီရောင်\"");
+//        color2StrMap.put("Dark Grey","\"深灰色/Dark Grey/สีเทาเข้ม/မီးခိုေရာင္\"");
+//        color2StrMap.put("Pink","\"粉红色/Pink/สีชมพู/ပန္ေရာင္\"");
+//        color2StrMap.put("Black","\"黑色/Black/สีดำ/အမည်း\"");
+//        color2StrMap.put("black","\"黑色/Black/สีดำ/အမည်း\"");
+//        color2StrMap.put("Army Green","\"军绿色/Army Green/อาร์มี่กรีน/အစိမ္းေရာင္\"");
+//        color2StrMap.put("Brown","\"棕色/Brown/สีน้ำตาล/ငပိအေရာင္\"");
+//        color2StrMap.put("Apricot","\"杏色/Apricot/แอปริคอท/Apricot\"");
+//        color2StrMap.put("Red","\"红色/Red/สีแดง/အနီေရာင်\"");
+//        color2StrMap.put("Wine Red","\"酒红色/Wine Red/สีแดงเลือดหมู/ဘာဂန်ဒီ။\"");
+//        color2StrMap.put("Navy Blue","\"藏青色/Navy Blue/น้ำเงิน/အပြာရင့်\"");
+//        color2StrMap.put("Light Blue","\"浅蓝色/Light Blue/สีฟ้า/မိုးပြာရောင်\"");
+//        color2StrMap.put("Purple","\"紫色/Purple/สีม่วง/ဗေဒါရောင်\"");
 
 
         staticSourceImgFile = new File(inputSourceImgPath);
@@ -234,7 +262,7 @@ public class Main {
     }
 
 
-    private static Map<String, Object[]> stylesMap = new HashMap<>();
+    private static Map<String, Map<String, String>> stylesMap = new HashMap<>();
     private static final Pattern ENGLISH_PATTERN = Pattern.compile("^[a-zA-Z]+$");
     public static boolean isEnglish(String str) {
         if (str == null) {
@@ -273,8 +301,9 @@ public class Main {
 
             rowObj.set("url", row.size() < 7 ? row.get(5) : row.get(6));
             rowObj.set("id", "pu");
+            rowObj.set("model", row.get(5));
             String styleIdStr = rowObj.getStr("styleId");
-            if (!"notsure".equals(styleIdStr) && isEnglish(styleIdStr.substring(0, 1)) && isEnglish(styleIdStr.substring(1, 2))) {
+            if (!"notsure".equals(styleIdStr) && isEnglish(styleIdStr.substring(0, 1)) && isEnglish(styleIdStr.substring(1, 2)) && !styleIdStr.contains("CP")) {
                 JSONObject rowObj2 = new JSONObject();
                 String styleId = rowObj.getStr("styleId");
                 rowObj2.set("orderId", rowObj.getStr("orderId"));
@@ -339,35 +368,55 @@ public class Main {
         new Thread(() -> createMainTable(getSameIndexes(orderIdSet, orderIdList), styleIdIndexList, rowsArray, tableName)).start();
     }
 
-    public static void statisticsStyles(String key, String ydId, JSONObject sku, Map<String, Object[]> styles, int tableIndex) {
+    public static void statisticsStyles(String key, String ydId, JSONObject sku, Map<String, Map<String, String>> styles, int tableIndex) {
         // 【订单号】--然后按【衣服种类】统计数量
         if (!styles.containsKey(key)) {
-            styles.put(key, new Object[]{ydId, 0, 0, 0, 0, 0, 0, 0, tablePreName +  date + "-" + tableIndex});
+            Map<String, String> map = new HashMap<>();
+            map.put("运单号", ydId);
+            map.put("T恤数量", "0");
+            map.put("双面数量", "0");
+            map.put("短款T恤数量", "0");
+            map.put("卫衣数量", "0");
+            map.put("成品数量", "0");
+            map.put("CP001", "0");
+            map.put("CP000", "0");
+            map.put("聚酯纤维数量", "0");
+            map.put("童装数量", "0");
+            map.put("所在表格", tablePreName +  date + "-" + tableIndex);
+
+            styles.put(key, map);
         }
+
+        Map<String, String> tempMap = styles.get(key);
 
         switch (sku.getStr("type").toLowerCase()) {
             case "100%cotton":
-                styles.get(key)[1] = (int) styles.get(key)[1] + 1;
+                tempMap.put("T恤数量", String.valueOf(Integer.valueOf(tempMap.get("T恤数量")) + 1));
                 break;
             case "short":
-                styles.get(key)[3] = (int) styles.get(key)[3] + 1;
+                tempMap.put("短款T恤数量", String.valueOf(Integer.valueOf(tempMap.get("短款T恤数量")) + 1));
                 break;
             case "hoodie":
-                styles.get(key)[4] = (int) styles.get(key)[4] + 1;
+                tempMap.put("卫衣数量", String.valueOf(Integer.valueOf(tempMap.get("卫衣数量")) + 1));
                 break;
-            case "s":
-                styles.get(key)[5] = (int) styles.get(key)[5] + 1;
+            case "成品":
+                tempMap.put("成品数量", String.valueOf(Integer.valueOf(tempMap.get("成品数量")) + 1));
+                if ("CP000".equals(sku.getStr("styleId"))) {
+                    tempMap.put("CP000", String.valueOf(Integer.valueOf(tempMap.get("CP000")) + 1));
+                } else {
+                    tempMap.put("CP001", String.valueOf(Integer.valueOf(tempMap.get("CP001")) + 1));
+                }
                 break;
             case "t-shirt":
-                styles.get(key)[6] = (int) styles.get(key)[6] + 1;
+                tempMap.put("聚酯纤维数量", String.valueOf(Integer.valueOf(tempMap.get("聚酯纤维数量")) + 1));
                 break;
             case "child":
-                styles.get(key)[7] = (int) styles.get(key)[7] + 1;
+                tempMap.put("童装数量", String.valueOf(Integer.valueOf(tempMap.get("童装数量")) + 1));
                 break;
         }
         String styleId = sku.getStr("styleId");
-        if (!"notsure".equals(styleId) && isEnglish(styleId.substring(0, 1)) && isEnglish(styleId.substring(1, 2))) {
-            styles.get(key)[2] = (int) styles.get(key)[2] + 1;
+        if (!"notsure".equals(styleId) && isEnglish(styleId.substring(0, 1)) && isEnglish(styleId.substring(1, 2)) && !key.contains("CP")) {
+            tempMap.put("双面数量", String.valueOf(Integer.valueOf(tempMap.get("双面数量")) + 1));
         }
     }
 
@@ -490,10 +539,22 @@ public class Main {
             setCellStyleAndValue(row, 3, style, rowObj.getStr("size"));
             setCellStyleAndValue(row, 4, style, rowObj.getStr("count"));
             setCellStyleAndValue(row, 5, style, rowObj.getStr("desc"));
-            setCellStyleAndValue(row, 6, getColorStyle(workbook, rowObj.getStr("type")), rowObj.getStr("type"));
+            if ("CP001".equals(rowObj.getStr("styleId"))) {
+                setCellStyleAndValue(row, 6, getColorStyle(workbook, ""), rowObj.getStr("type"));
+            } else {
+                setCellStyleAndValue(row, 6, getColorStyle(workbook, rowObj.getStr("type")), rowObj.getStr("type"));
+            }
             setCellStyleAndValue(row, 7, style, rowObj.getStr("url"));
 
-            setImg(rowObj.getStr("url"), 7, i + 2,workbook, sheet);
+            if (rowObj.getStr("model").contains("พ่อ")) {
+                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 1);
+            } else if (rowObj.getStr("model").contains("แม่")) {
+                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 2);
+            } else if (rowObj.getStr("model").contains("เด็ก")) {
+                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 3);
+            } else {
+                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 0);
+            }
 
             setCellStyleAndValue(row, 8, style, rowObj.getStr("id"));
 
@@ -557,10 +618,9 @@ public class Main {
         cell.setCellValue(v);
     }
 
-    public static void setImg(String urlStr, int col, int row, Workbook workbook, Sheet sheet) {
+    public static void setImg(String urlStr, int col, int row, Workbook workbook, Sheet sheet, int flag) {
         try {
             // 从 URL 下载图片
-            System.out.println("urlStr: " + urlStr);
             URL url = new URL(urlStr); // 替换为实际的图片 URL
             URLConnection connection = url.openConnection();
             InputStream inputStream = connection.getInputStream();
@@ -568,9 +628,32 @@ public class Main {
             inputStream.close();
 
             // 将图片转换为 BufferedImage
-            InputStream bis = new ByteArrayInputStream(bytes);
-            BufferedImage bufferedImage = ImageIO.read(bis);
-            bis.close();
+            if (flag == 1) {
+                InputStream bis = new ByteArrayInputStream(bytes);
+                BufferedImage originalImage = ImageIO.read(bis);
+                bis.close();
+                BufferedImage croppedImage = cropImage(originalImage, 0, 40, 200, 200);
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                ImageIO.write(croppedImage, "jpeg", os);
+                bytes = os.toByteArray();
+            } else if (flag == 2) {
+                InputStream bis = new ByteArrayInputStream(bytes);
+                BufferedImage originalImage = ImageIO.read(bis);
+                bis.close();
+                BufferedImage croppedImage = cropImage(originalImage, 120, 40, 200, 200);
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                ImageIO.write(croppedImage, "jpeg", os);
+                bytes = os.toByteArray();
+            } else if (flag == 3) {
+                InputStream bis = new ByteArrayInputStream(bytes);
+                BufferedImage originalImage = ImageIO.read(bis);
+                bis.close();
+                BufferedImage croppedImage = cropImage(originalImage, 60, 120, 200, 200);
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                ImageIO.write(croppedImage, "jpeg", os);
+                bytes = os.toByteArray();
+            }
+
 
             // 将图片添加到工作簿中
             int pictureIdx = workbook.addPicture(bytes, Workbook.PICTURE_TYPE_JPEG);
@@ -599,6 +682,10 @@ public class Main {
         }
     }
 
+    private static BufferedImage cropImage(BufferedImage originalImage, int x, int y, int width, int height) {
+        return originalImage.getSubimage(x, y, width, height);
+    }
+
     public static CellRangeAddress mergeRegion(int firstRow, int lastRow, int firstColumn, int lastColumn) {
         return new CellRangeAddress(
                 firstRow, // first row (0-based)
@@ -617,42 +704,44 @@ public class Main {
     private static Map<String, String> preTypeMap = new HashMap<>();
     private static Map<String, String> type2ColorMap = new HashMap<>();
     static {
-        color2StrMap.put("White","\"白色/White/สีขาว/အဖြူ\"");
-        color2StrMap.put("Rose Red","\"玫红色/Rose Red/กุหลาบแดง/အနီရောင်\"");
-        color2StrMap.put("Dark Grey","\"深灰色/Dark Grey/สีเทาเข้ม/မီးခိုေရာင္\"");
-        color2StrMap.put("Pink","\"粉红色/Pink/สีชมพู/ပန္ေရာင္\"");
-        color2StrMap.put("Black","\"黑色/Black/สีดำ/အမည်း\"");
-        color2StrMap.put("black","\"黑色/Black/สีดำ/အမည်း\"");
-        color2StrMap.put("Army Green","\"军绿色/Army Green/อาร์มี่กรีน/အစိမ္းေရာင္\"");
-        color2StrMap.put("Brown","\"棕色/Brown/สีน้ำตาล/ငပိအေရာင္\"");
-        color2StrMap.put("Apricot","\"杏色/Apricot/แอปริคอท/Apricot\"");
-        color2StrMap.put("Red","\"红色/Red/สีแดง/အနီေရာင်\"");
-        color2StrMap.put("Wine Red","\"酒红色/Wine Red/สีแดงเลือดหมู/ဘာဂန်ဒီ။\"");
-        color2StrMap.put("Navy Blue","\"藏青色/Navy Blue/น้ำเงิน/အပြာရင့်\"");
-        color2StrMap.put("Light Blue","\"浅蓝色/Light Blue/สีฟ้า/မိုးပြာရောင်\"");
-        color2StrMap.put("Purple","\"紫色/Purple/สีม่วง/ဗေဒါရောင်\"");
 
         type2StrMap.put("100%cotton", "T-shirt");
         type2StrMap.put("short", "short");
         type2StrMap.put("hoodie", "Hoodie");
-        type2StrMap.put("s", "随机成品");
+        type2StrMap.put("cp001", "随机成品");
+        type2StrMap.put("cp000", "随机成品");
         type2StrMap.put("t", "聚酯纤维");
         type2StrMap.put("child", "Child");
 
         preTypeMap.put("short", "100%cotton");
-        preTypeMap.put("s", "随机成品");
+        preTypeMap.put("成品", "随机成品");
 
         type2ColorMap.put("short", "112,48,160");
-        type2ColorMap.put("s", "146,208,80");
+        type2ColorMap.put("成品", "146,208,80");
         type2ColorMap.put("hoodie", "47,117,181");
     }
     public static JSONObject handleSku(String sku, JSONObject rowObj) {
         // 3个-中间加 100%Cotton
-        String[] tempArray = sku.substring(0, sku.indexOf('(')).split("-");
-        String kg = sku.substring(sku.indexOf('('), sku.length());
-        if (tempArray.length == 3) {
-            tempArray = (tempArray[0] + "-100%Cotton-" + tempArray[1] + "-" + tempArray[2]).split("-");
+        String[] tempArray = null;
+        String tempStr = sku.substring(0, sku.indexOf('('));
+        if (sku.contains("T-shirt")) {
+            List<String> parts = new ArrayList<>();
+            int tShirtIndex = tempStr.indexOf("T-shirt");
+            String beforeTShirt = tempStr.substring(0, tShirtIndex - 1);
+            parts.add(beforeTShirt);
+            parts.add("T-shirt");
+            String afterTShirt = tempStr.substring(tShirtIndex + 8);
+            String[] remainingParts = afterTShirt.split("-");
+            parts.addAll(Arrays.asList(remainingParts));
+            tempArray = parts.toArray(new String[0]);
+        } else {
+            tempArray = tempStr.split("-");
+            if (tempArray.length == 3) {
+                tempArray = (tempArray[0] + "-100%Cotton-" + tempArray[1] + "-" + tempArray[2]).split("-");
+            }
         }
+
+        String kg = sku.substring(sku.indexOf('('), sku.length());
 
         // AA7879-Apricot-M
         // 款号
@@ -665,7 +754,12 @@ public class Main {
         rowObj.set("size",tempArray[3]);
 
         // 统计衣服
-        statisticsCount(tempArray[1] + "-" + tempArray[2] + "-" + tempArray[3] + kg, miniSkusCount);
+        if ("成品".equals(tempArray[1])) {
+            statisticsCount(tempArray[0] + "-" + tempArray[1] + "-" + tempArray[2] + "-" + tempArray[3] + kg, miniSkusCount);
+        } else {
+            statisticsCount(tempArray[1] + "-" + tempArray[2] + "-" + tempArray[3] + kg, miniSkusCount);
+        }
+
         // 统计款号
         statisticsCount(tempArray[0], skuIdsCount);
 
@@ -717,22 +811,27 @@ public class Main {
         row2.createCell(4).setCellValue("短款T恤数量");
         row2.createCell(5).setCellValue("卫衣数量");
         row2.createCell(6).setCellValue("成品数量");
-        row2.createCell(7).setCellValue("聚酯纤维数量");
-        row2.createCell(8).setCellValue("童装数量");
-        row2.createCell(9).setCellValue("所在表格");
+        row2.createCell(7).setCellValue("CP001");
+        row2.createCell(8).setCellValue("CP000");
+        row2.createCell(9).setCellValue("聚酯纤维数量");
+        row2.createCell(10).setCellValue("童装数量");
+        row2.createCell(11).setCellValue("所在表格");
         sheetRowCount = 1;
         for (String key : stylesMap.keySet()) {
             Row row21 = sheet2.createRow(sheetRowCount);
             row21.createCell(0).setCellValue(key);
-            row21.createCell(1).setCellValue(String.valueOf(stylesMap.get(key)[0]));
-            row21.createCell(2).setCellValue(String.valueOf(stylesMap.get(key)[1]));
-            row21.createCell(3).setCellValue(String.valueOf(stylesMap.get(key)[2]));
-            row21.createCell(4).setCellValue(String.valueOf(stylesMap.get(key)[3]));
-            row21.createCell(5).setCellValue(String.valueOf(stylesMap.get(key)[4]));
-            row21.createCell(6).setCellValue(String.valueOf(stylesMap.get(key)[5]));
-            row21.createCell(7).setCellValue(String.valueOf(stylesMap.get(key)[6]));
-            row21.createCell(8).setCellValue(String.valueOf(stylesMap.get(key)[7]));
-            row21.createCell(9).setCellValue(String.valueOf(stylesMap.get(key)[8]));
+            Map<String, String> tempMap = stylesMap.get(key);
+            row21.createCell(1).setCellValue(tempMap.get("运单号"));
+            row21.createCell(2).setCellValue(tempMap.get("T恤数量"));
+            row21.createCell(3).setCellValue(tempMap.get("双面数量"));
+            row21.createCell(4).setCellValue(tempMap.get("短款T恤数量"));
+            row21.createCell(5).setCellValue(tempMap.get("卫衣数量"));
+            row21.createCell(6).setCellValue(tempMap.get("成品数量"));
+            row21.createCell(7).setCellValue(tempMap.get("CP001"));
+            row21.createCell(8).setCellValue(tempMap.get("CP000"));
+            row21.createCell(9).setCellValue(tempMap.get("聚酯纤维数量"));
+            row21.createCell(10).setCellValue(tempMap.get("童装数量"));
+            row21.createCell(11).setCellValue(tempMap.get("所在表格"));
             sheetRowCount += 1;
         }
 
@@ -747,7 +846,7 @@ public class Main {
             row31.createCell(0).setCellValue(key);
             row31.createCell(1).setCellValue(skuIdsCount.get(key));
             sheetRowCount += 1;
-            if (!"notsure".equals(key) && isEnglish(key.substring(0, 1)) && isEnglish(key.substring(1, 2))) {
+            if (!"notsure".equals(key) && isEnglish(key.substring(0, 1)) && isEnglish(key.substring(1, 2)) && !key.contains("CP")) {
                 doubleCount += skuIdsCount.get(key);
             }
         }
