@@ -4,7 +4,6 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
-import org.apache.commons.compress.archivers.zip.X0017_StrongEncryptionHeader;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -12,7 +11,6 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.imageio.ImageIO;
-import javax.lang.model.element.ElementKind;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
@@ -22,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +42,7 @@ public class Main {
 
     private static File[] newImgFile;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 //        System.setProperty("file.encoding", "UTF-8");
         //解决路径包含中文的情况
 
@@ -59,7 +58,6 @@ public class Main {
             inputTableIndex = Integer.valueOf(scanner.nextLine());
             System.out.print("输入源文件路径: ");
             String inputSourceExcelPath = scanner.nextLine();
-            System.out.println("源文件路径============> "+inputSourceExcelPath);
             System.out.print("输入输出文件夹路径: ");
             staticOutputFilePath = scanner.nextLine();
             System.out.print("输入源图库路径: ");
@@ -70,62 +68,60 @@ public class Main {
             String inputColorPath = scanner.nextLine();
 
 
-//        tablePreName = "pu";
-//        date = "4.1";
-//        inputTableIndex = 2;
-//        String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/副本order_20240821163657944_938683.xlsx";
-//        staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
-//        String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
-//        staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
-//        String inputColorPath = "/Users/fury/workspace/business_project/生产/颜色对应关系.xlsx";
-
-        ExcelReader reader = ExcelUtil.getReader(inputColorPath);
-        List<Map<String, Object>> readAll = reader.readAll();
-        for (Map<String, Object> map : readAll) {
-            color2StrMap.put(map.get("原表").toString(), "\"" + map.get("需要呈现的语言").toString() + "\"");
-        }
-
-//        color2StrMap.put("White","\"白色/White/สีขาว/အဖြူ\"");
-//        color2StrMap.put("Rose Red","\"玫红色/Rose Red/กุหลาบแดง/အနီရောင်\"");
-//        color2StrMap.put("Dark Grey","\"深灰色/Dark Grey/สีเทาเข้ม/မီးခိုေရာင္\"");
-//        color2StrMap.put("Pink","\"粉红色/Pink/สีชมพู/ပန္ေရာင္\"");
-//        color2StrMap.put("Black","\"黑色/Black/สีดำ/အမည်း\"");
-//        color2StrMap.put("black","\"黑色/Black/สีดำ/အမည်း\"");
-//        color2StrMap.put("Army Green","\"军绿色/Army Green/อาร์มี่กรีน/အစိမ္းေရာင္\"");
-//        color2StrMap.put("Brown","\"棕色/Brown/สีน้ำตาล/ငပိအေရာင္\"");
-//        color2StrMap.put("Apricot","\"杏色/Apricot/แอปริคอท/Apricot\"");
-//        color2StrMap.put("Red","\"红色/Red/สีแดง/အနီေရာင်\"");
-//        color2StrMap.put("Wine Red","\"酒红色/Wine Red/สีแดงเลือดหมู/ဘာဂန်ဒီ။\"");
-//        color2StrMap.put("Navy Blue","\"藏青色/Navy Blue/น้ำเงิน/အပြာရင့်\"");
-//        color2StrMap.put("Light Blue","\"浅蓝色/Light Blue/สีฟ้า/မိုးပြာရောင်\"");
-//        color2StrMap.put("Purple","\"紫色/Purple/สีม่วง/ဗေဒါရောင်\"");
+//            tablePreName = "pu";
+//            date = "4.1";
+//            inputTableIndex = 2;
+//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/123.xlsx";
+//            staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
+//            String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
+//            staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
+//            String inputColorPath = "/Users/fury/workspace/business_project/生产/颜色对应关系.xlsx";
 
 
-        staticSourceImgFile = new File(inputSourceImgPath);
+            staticSourceImgFile = new File(inputSourceImgPath);
 
-        Path staticOutputFile = Paths.get(staticOutputFilePath);
-        if (!Files.exists(staticOutputFile)) {
-            try {
-                Files.createDirectories(staticOutputFile);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            Path staticOutputFile = Paths.get(staticOutputFilePath);
+            if (!Files.exists(staticOutputFile)) {
+                try {
+                    Files.createDirectories(staticOutputFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-        }
 
-        newImgFile = getAllImages(staticSourceImgFile, new ArrayList<>()).toArray(new File[0]);
+            newImgFile = getAllImages(staticSourceImgFile, new ArrayList<>()).toArray(new File[0]);
 
-        readExcel(inputSourceExcelPath);
-
+            readExcel(inputSourceExcelPath, inputColorPath);
 
 
-//        scanner.close();
+
+            scanner.close();
         } catch (Exception e) {
             e.printStackTrace();
+            TimeUnit.SECONDS.sleep(1000);
         }
     }
 
 
-    public static void readExcel(String inputSourceExcelPath) {
+    public static void readExcel(String inputSourceExcelPath, String inputColorPath) {
+        System.out.println("====开始读取颜色对应关系文件");
+        List<List<Object>> allList1 = new ArrayList<>();
+        try (FileInputStream inputStream = new FileInputStream(Paths.get(inputColorPath).toFile());
+             Workbook workbook = new XSSFWorkbook(inputStream)) {
+
+            // 获取第一个工作表
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue; // 跳过空行
+
+                color2StrMap.put(row.getCell(0).getStringCellValue(), row.getCell(1).getStringCellValue());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("====开始读取原表");
         List<List<Object>> allList = new ArrayList<>();
         try (FileInputStream inputStream = new FileInputStream(Paths.get(inputSourceExcelPath).toFile());
@@ -160,6 +156,8 @@ public class Main {
         if (allList.size() != 0) {
             handleAllList(allList);
         }
+
+
     }
 
     public static void handleAllList(List<List<Object>> allList) {
@@ -407,6 +405,8 @@ public class Main {
                     tempMap.put("CP001", String.valueOf(Integer.valueOf(tempMap.get("CP001")) + 1));
                 }
                 break;
+            case "s":
+                tempMap.put("成品数量", String.valueOf(Integer.valueOf(tempMap.get("成品数量")) + 1));
             case "t-shirt":
                 tempMap.put("聚酯纤维数量", String.valueOf(Integer.valueOf(tempMap.get("聚酯纤维数量")) + 1));
                 break;
@@ -546,11 +546,11 @@ public class Main {
             }
             setCellStyleAndValue(row, 7, style, rowObj.getStr("url"));
 
-            if (rowObj.getStr("model").contains("พ่อ")) {
+            if (String.valueOf(rowObj.get("model")).contains("พ่อ")) {
                 setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 1);
-            } else if (rowObj.getStr("model").contains("แม่")) {
+            } else if (String.valueOf(rowObj.get("model")).contains("แม่")) {
                 setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 2);
-            } else if (rowObj.getStr("model").contains("เด็ก")) {
+            } else if (String.valueOf(rowObj.get("model")).contains("เด็ก")) {
                 setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 3);
             } else {
                 setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 0);
@@ -708,13 +708,15 @@ public class Main {
         type2StrMap.put("100%cotton", "T-shirt");
         type2StrMap.put("short", "short");
         type2StrMap.put("hoodie", "Hoodie");
-        type2StrMap.put("cp001", "随机成品");
-        type2StrMap.put("cp000", "随机成品");
+        type2StrMap.put("cp001", "成品");
+        type2StrMap.put("cp000", "成品");
+        type2StrMap.put("s", "成品");
         type2StrMap.put("t", "聚酯纤维");
         type2StrMap.put("child", "Child");
 
         preTypeMap.put("short", "100%cotton");
-        preTypeMap.put("成品", "随机成品");
+        preTypeMap.put("成品", "成品");
+        preTypeMap.put("s", "成品");
 
         type2ColorMap.put("short", "112,48,160");
         type2ColorMap.put("成品", "146,208,80");
