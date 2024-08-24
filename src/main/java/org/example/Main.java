@@ -2,8 +2,6 @@ package org.example;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
-import cn.hutool.poi.excel.ExcelReader;
-import cn.hutool.poi.excel.ExcelUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -43,8 +41,6 @@ public class Main {
     private static File[] newImgFile;
 
     public static void main(String[] args) throws InterruptedException {
-//        System.setProperty("file.encoding", "UTF-8");
-        //解决路径包含中文的情况
 
         try {
             // 创建一个Scanner对象，用于从控制台读取输入
@@ -71,7 +67,7 @@ public class Main {
 //            tablePreName = "pu";
 //            date = "4.1";
 //            inputTableIndex = 2;
-//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/123.xlsx";
+//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/副本123.xlsx";
 //            staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
 //            String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
 //            staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
@@ -300,6 +296,8 @@ public class Main {
             rowObj.set("url", row.size() < 7 ? row.get(5) : row.get(6));
             rowObj.set("id", "pu");
             rowObj.set("model", row.get(5));
+            rowObj.set("platform", row.get(7) == null ? "" : row.get(7));
+            rowObj.set("account", row.get(8) == null ? "" : row.get(8));
             String styleIdStr = rowObj.getStr("styleId");
             if (!"notsure".equals(styleIdStr) && isEnglish(styleIdStr.substring(0, 1)) && isEnglish(styleIdStr.substring(1, 2)) && !styleIdStr.contains("CP")) {
                 JSONObject rowObj2 = new JSONObject();
@@ -363,11 +361,12 @@ public class Main {
             renameAndCopyImages(subFolder, imgRow, tableName);
         }
 
-        new Thread(() -> createMainTable(getSameIndexes(orderIdSet, orderIdList), styleIdIndexList, rowsArray, tableName)).start();
+        createMainTable(getSameIndexes(orderIdSet, orderIdList), styleIdIndexList, rowsArray, tableName);
     }
 
     public static void statisticsStyles(String key, String ydId, JSONObject sku, Map<String, Map<String, String>> styles, int tableIndex) {
-        // 【订单号】--然后按【衣服种类】统计数量
+        // 【订单号】--然后按【衣服种类】统计数量\
+
         if (!styles.containsKey(key)) {
             Map<String, String> map = new HashMap<>();
             map.put("运单号", ydId);
@@ -376,12 +375,11 @@ public class Main {
             map.put("短款T恤数量", "0");
             map.put("卫衣数量", "0");
             map.put("成品数量", "0");
-            map.put("CP001", "0");
-            map.put("CP000", "0");
             map.put("聚酯纤维数量", "0");
             map.put("童装数量", "0");
             map.put("所在表格", tablePreName +  date + "-" + tableIndex);
-
+            map.put("平台渠道", String.valueOf(sku.get("platform")));
+            map.put("店铺账号", String.valueOf(sku.get("account")));
             styles.put(key, map);
         }
 
@@ -399,10 +397,18 @@ public class Main {
                 break;
             case "成品":
                 tempMap.put("成品数量", String.valueOf(Integer.valueOf(tempMap.get("成品数量")) + 1));
-                if ("CP000".equals(sku.getStr("styleId"))) {
-                    tempMap.put("CP000", String.valueOf(Integer.valueOf(tempMap.get("CP000")) + 1));
-                } else {
-                    tempMap.put("CP001", String.valueOf(Integer.valueOf(tempMap.get("CP001")) + 1));
+                if (sku.getStr("styleId").contains("CP")) {
+                    String styleId = sku.getStr("styleId");
+                    int cpCount = 0;
+                    if (tempMap.containsKey(styleId)) {
+                        cpCount = Integer.valueOf(tempMap.get(styleId));
+                    }
+                    tempMap.put(styleId, String.valueOf(cpCount + 1));
+
+                    cpNameSet.add(styleId);
+                    if (!type2StrMap.containsKey(styleId)) {
+                        type2StrMap.put(styleId.toLowerCase(), "成品");
+                    }
                 }
                 break;
             case "s":
@@ -415,7 +421,7 @@ public class Main {
                 break;
         }
         String styleId = sku.getStr("styleId");
-        if (!"notsure".equals(styleId) && isEnglish(styleId.substring(0, 1)) && isEnglish(styleId.substring(1, 2)) && !key.contains("CP")) {
+        if (!"notsure".equals(styleId) && isEnglish(styleId.substring(0, 1)) && isEnglish(styleId.substring(1, 2)) && !styleId.contains("CP")) {
             tempMap.put("双面数量", String.valueOf(Integer.valueOf(tempMap.get("双面数量")) + 1));
         }
     }
@@ -539,22 +545,15 @@ public class Main {
             setCellStyleAndValue(row, 3, style, rowObj.getStr("size"));
             setCellStyleAndValue(row, 4, style, rowObj.getStr("count"));
             setCellStyleAndValue(row, 5, style, rowObj.getStr("desc"));
-            if ("CP001".equals(rowObj.getStr("styleId"))) {
-                setCellStyleAndValue(row, 6, getColorStyle(workbook, ""), rowObj.getStr("type"));
-            } else {
+            if ("CP000".equals(rowObj.getStr("styleId"))) {
+                // cp000不染色
                 setCellStyleAndValue(row, 6, getColorStyle(workbook, rowObj.getStr("type")), rowObj.getStr("type"));
+            } else {
+                setCellStyleAndValue(row, 6, getColorStyle(workbook, ""), rowObj.getStr("type"));
             }
             setCellStyleAndValue(row, 7, style, rowObj.getStr("url"));
 
-            if (String.valueOf(rowObj.get("model")).contains("พ่อ")) {
-                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 1);
-            } else if (String.valueOf(rowObj.get("model")).contains("แม่")) {
-                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 2);
-            } else if (String.valueOf(rowObj.get("model")).contains("เด็ก")) {
-                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 3);
-            } else {
-                setImg(rowObj.getStr("url"), 7, i + 2, workbook, sheet, 0);
-            }
+            setImg(rowObj, 7, i + 2, workbook, sheet);
 
             setCellStyleAndValue(row, 8, style, rowObj.getStr("id"));
 
@@ -618,42 +617,49 @@ public class Main {
         cell.setCellValue(v);
     }
 
-    public static void setImg(String urlStr, int col, int row, Workbook workbook, Sheet sheet, int flag) {
+    public static void setImg(JSONObject rowObj, int col, int row, Workbook workbook, Sheet sheet) {
         try {
             // 从 URL 下载图片
-            URL url = new URL(urlStr); // 替换为实际的图片 URL
+            URL url = new URL(String.valueOf(rowObj.get("url"))); // 替换为实际的图片 URL
             URLConnection connection = url.openConnection();
             InputStream inputStream = connection.getInputStream();
             byte[] bytes = IOUtils.toByteArray(inputStream);
             inputStream.close();
 
-            // 将图片转换为 BufferedImage
-            if (flag == 1) {
-                InputStream bis = new ByteArrayInputStream(bytes);
-                BufferedImage originalImage = ImageIO.read(bis);
-                bis.close();
-                BufferedImage croppedImage = cropImage(originalImage, 0, 40, 200, 200);
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                ImageIO.write(croppedImage, "jpeg", os);
-                bytes = os.toByteArray();
-            } else if (flag == 2) {
-                InputStream bis = new ByteArrayInputStream(bytes);
-                BufferedImage originalImage = ImageIO.read(bis);
-                bis.close();
-                BufferedImage croppedImage = cropImage(originalImage, 120, 40, 200, 200);
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                ImageIO.write(croppedImage, "jpeg", os);
-                bytes = os.toByteArray();
-            } else if (flag == 3) {
-                InputStream bis = new ByteArrayInputStream(bytes);
-                BufferedImage originalImage = ImageIO.read(bis);
-                bis.close();
-                BufferedImage croppedImage = cropImage(originalImage, 60, 120, 200, 200);
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                ImageIO.write(croppedImage, "jpeg", os);
-                bytes = os.toByteArray();
+            InputStream bis = new ByteArrayInputStream(bytes);
+            BufferedImage originalImage = ImageIO.read(bis);
+            bis.close();
+            int x = 0;
+            int y = 0;
+            int width = originalImage.getWidth();
+            int height = originalImage.getHeight();
+            String model = String.valueOf(rowObj.get("model"));
+            if (model.contains("พ่อ")) {
+                x = 10;
+                y = 70;
+                width = 160;
+                height = 160;
+            } else if (model.contains("แม่")) {
+                x = 160;
+                y = 70;
+                width = 160;
+                height = 160;
             }
+//            } else if (model.contains("เด็ก")) {
+//                String styleIdStr = String.valueOf(rowObj.get("styleId"));
+//                // 童装双面不用裁剪
+//                if (!(!"notsure".equals(styleIdStr) && isEnglish(styleIdStr.substring(0, 1)) && isEnglish(styleIdStr.substring(1, 2)) && !styleIdStr.contains("CP"))) {
+//                    x = 80;
+//                    y = 140;
+//                    width = 160;
+//                    height = 160;
+//                }
+//            }
 
+            BufferedImage croppedImage = cropImage(originalImage, x, y, width, height);
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(croppedImage, "jpeg", os);
+            bytes = os.toByteArray();
 
             // 将图片添加到工作簿中
             int pictureIdx = workbook.addPicture(bytes, Workbook.PICTURE_TYPE_JPEG);
@@ -701,6 +707,8 @@ public class Main {
     private static Map<String, String> color2StrMap = new HashMap<>();
     private static Map<String, String> type2StrMap = new HashMap<>();
 
+    private static Set<String> cpNameSet = new HashSet<>();
+
     private static Map<String, String> preTypeMap = new HashMap<>();
     private static Map<String, String> type2ColorMap = new HashMap<>();
     static {
@@ -708,8 +716,6 @@ public class Main {
         type2StrMap.put("100%cotton", "T-shirt");
         type2StrMap.put("short", "short");
         type2StrMap.put("hoodie", "Hoodie");
-        type2StrMap.put("cp001", "成品");
-        type2StrMap.put("cp000", "成品");
         type2StrMap.put("s", "成品");
         type2StrMap.put("t", "聚酯纤维");
         type2StrMap.put("child", "Child");
@@ -806,34 +812,52 @@ public class Main {
 
         Sheet sheet2 = workbook.createSheet("订单号+衣服种类");
         Row row2 = sheet2.createRow(0);
-        row2.createCell(0).setCellValue("订单号");
-        row2.createCell(1).setCellValue("运单号");
-        row2.createCell(2).setCellValue("T恤数量");
-        row2.createCell(3).setCellValue("双面数量");
-        row2.createCell(4).setCellValue("短款T恤数量");
-        row2.createCell(5).setCellValue("卫衣数量");
-        row2.createCell(6).setCellValue("成品数量");
-        row2.createCell(7).setCellValue("CP001");
-        row2.createCell(8).setCellValue("CP000");
-        row2.createCell(9).setCellValue("聚酯纤维数量");
-        row2.createCell(10).setCellValue("童装数量");
-        row2.createCell(11).setCellValue("所在表格");
+        row2.createCell(0).setCellValue("所在表格");
+        row2.createCell(1).setCellValue("平台渠道");
+        row2.createCell(2).setCellValue("店铺账号");
+        row2.createCell(3).setCellValue("订单号");
+        row2.createCell(4).setCellValue("运单号");
+        row2.createCell(5).setCellValue("T恤数量");
+        row2.createCell(6).setCellValue("双面数量");
+        row2.createCell(7).setCellValue("童装数量");
+        row2.createCell(8).setCellValue("短款T恤数量");
+        row2.createCell(9).setCellValue("卫衣数量");
+        row2.createCell(10).setCellValue("聚酯纤维数量");
+        row2.createCell(11).setCellValue("成品数量");
+        List<String> cpNamelist = new ArrayList<>(cpNameSet);
+        Collections.sort(cpNamelist, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                // 按照字符串的自然顺序排序
+                return o1.compareTo(o2);
+            }
+        });
+        for (int i = 0; i < cpNamelist.size(); i++) {
+            int index = i + 12;
+            row2.createCell(index).setCellValue(cpNamelist.get(i));
+        }
+
         sheetRowCount = 1;
         for (String key : stylesMap.keySet()) {
             Row row21 = sheet2.createRow(sheetRowCount);
-            row21.createCell(0).setCellValue(key);
             Map<String, String> tempMap = stylesMap.get(key);
-            row21.createCell(1).setCellValue(tempMap.get("运单号"));
-            row21.createCell(2).setCellValue(tempMap.get("T恤数量"));
-            row21.createCell(3).setCellValue(tempMap.get("双面数量"));
-            row21.createCell(4).setCellValue(tempMap.get("短款T恤数量"));
-            row21.createCell(5).setCellValue(tempMap.get("卫衣数量"));
-            row21.createCell(6).setCellValue(tempMap.get("成品数量"));
-            row21.createCell(7).setCellValue(tempMap.get("CP001"));
-            row21.createCell(8).setCellValue(tempMap.get("CP000"));
-            row21.createCell(9).setCellValue(tempMap.get("聚酯纤维数量"));
-            row21.createCell(10).setCellValue(tempMap.get("童装数量"));
-            row21.createCell(11).setCellValue(tempMap.get("所在表格"));
+            row21.createCell(0).setCellValue(tempMap.get("所在表格"));
+            row21.createCell(1).setCellValue(tempMap.get("平台渠道"));
+            row21.createCell(2).setCellValue(tempMap.get("店铺账号"));
+            row21.createCell(3).setCellValue(key);
+            row21.createCell(4).setCellValue(tempMap.get("运单号"));
+            row21.createCell(5).setCellValue(tempMap.get("T恤数量"));
+            row21.createCell(6).setCellValue(tempMap.get("双面数量"));
+            row21.createCell(7).setCellValue(tempMap.get("童装数量"));
+            row21.createCell(8).setCellValue(tempMap.get("短款T恤数量"));
+            row21.createCell(9).setCellValue(tempMap.get("卫衣数量"));
+            row21.createCell(10).setCellValue(tempMap.get("聚酯纤维数量"));
+            row21.createCell(11).setCellValue(tempMap.get("成品数量"));
+            for (int i = 0; i < cpNamelist.size(); i++) {
+                int index = i + 12;
+                row21.createCell(index).setCellValue(tempMap.get(cpNamelist.get(i)) == null ? "0" : tempMap.get(cpNamelist.get(i)));
+            }
+
             sheetRowCount += 1;
         }
 
