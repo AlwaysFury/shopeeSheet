@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -67,7 +68,7 @@ public class Main {
 //            tablePreName = "pu";
 //            date = "4.1";
 //            inputTableIndex = 2;
-//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/副本123.xlsx";
+//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/sh.xlsx";
 //            staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
 //            String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
 //            staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
@@ -629,21 +630,35 @@ public class Main {
             InputStream bis = new ByteArrayInputStream(bytes);
             BufferedImage originalImage = ImageIO.read(bis);
             bis.close();
-            int x = 0;
-            int y = 0;
-            int width = originalImage.getWidth();
-            int height = originalImage.getHeight();
+            double x = 0;
+            double y = 0;
+            double width = originalImage.getWidth();
+            double height = originalImage.getHeight();
             String model = String.valueOf(rowObj.get("model"));
             if (model.contains("พ่อ")) {
                 x = 10;
                 y = 70;
                 width = 160;
                 height = 160;
+
             } else if (model.contains("แม่")) {
+                System.out.println(rowObj);
+                System.out.println("width===>"+width);
+                System.out.println("height===>"+height);
                 x = 160;
                 y = 70;
                 width = 160;
                 height = 160;
+            }
+
+            if (x + width > originalImage.getWidth() || y + height > originalImage.getHeight()) {
+                double result = (double) originalImage.getWidth() / 320;
+                DecimalFormat df = new DecimalFormat("#.##");
+                double multiple = Double.parseDouble(df.format((double) originalImage.getWidth() / 320));
+                x = x * multiple;
+                y = y * multiple;
+                width = width * multiple;
+                height = height * multiple;
             }
 //            } else if (model.contains("เด็ก")) {
 //                String styleIdStr = String.valueOf(rowObj.get("styleId"));
@@ -656,7 +671,7 @@ public class Main {
 //                }
 //            }
 
-            BufferedImage croppedImage = cropImage(originalImage, x, y, width, height);
+            BufferedImage croppedImage = cropImage(originalImage, (int) x, (int) y, (int) width, (int) height);
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             ImageIO.write(croppedImage, "jpeg", os);
             bytes = os.toByteArray();
