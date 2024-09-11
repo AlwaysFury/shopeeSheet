@@ -68,7 +68,7 @@ public class Main {
 //            tablePreName = "pu";
 //            date = "4.1";
 //            inputTableIndex = 2;
-//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/sh.xlsx";
+//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/副本表3.xlsx";
 //            staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
 //            String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
 //            staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
@@ -621,9 +621,21 @@ public class Main {
     public static void setImg(JSONObject rowObj, int col, int row, Workbook workbook, Sheet sheet) {
         try {
             // 从 URL 下载图片
-            URL url = new URL(String.valueOf(rowObj.get("url"))); // 替换为实际的图片 URL
+            String urlStr = String.valueOf(rowObj.get("url"));
+            String pattern = "\\.jpg[^.]*\\.jpg";
+            if (urlStr.matches(".*" + pattern + ".*")) {
+                urlStr = urlStr.substring(0,urlStr.indexOf(".jpg") + 4);
+            }
+            URL url = new URL(urlStr); // 替换为实际的图片 URL
             URLConnection connection = url.openConnection();
-            InputStream inputStream = connection.getInputStream();
+            InputStream inputStream = null;
+            try {
+                inputStream = connection.getInputStream();
+            } catch (Exception e) {
+                System.out.println("图片下载有问题：" + e);
+                return;
+            }
+
             byte[] bytes = IOUtils.toByteArray(inputStream);
             inputStream.close();
 
@@ -642,9 +654,6 @@ public class Main {
                 height = 160;
 
             } else if (model.contains("แม่")) {
-                System.out.println(rowObj);
-                System.out.println("width===>"+width);
-                System.out.println("height===>"+height);
                 x = 160;
                 y = 70;
                 width = 160;
