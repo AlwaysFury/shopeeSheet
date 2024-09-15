@@ -68,7 +68,7 @@ public class Main {
 //            tablePreName = "pu";
 //            date = "4.1";
 //            inputTableIndex = 2;
-//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/生产/副本表3.xlsx";
+//            String inputSourceExcelPath = "/Users/fury/workspace/business_project/表格/副本表3.xlsx";
 //            staticOutputFilePath = "/Users/fury/workspace/business_project/生产/生产表格统计";
 //            String inputSourceImgPath = "/Users/fury/workspace/business_project/生产/p";
 //            staticTargetImgFilePath = "/Users/fury/workspace/business_project/生产/图库统计";
@@ -299,6 +299,7 @@ public class Main {
             rowObj.set("model", row.get(5));
             rowObj.set("platform", row.get(7) == null ? "" : row.get(7));
             rowObj.set("account", row.get(8) == null ? "" : row.get(8));
+            rowObj.set("paytime", row.get(9) == null ? "" : row.get(9));
             String styleIdStr = rowObj.getStr("styleId");
             if (!"notsure".equals(styleIdStr) && isEnglish(styleIdStr.substring(0, 1)) && isEnglish(styleIdStr.substring(1, 2)) && !styleIdStr.contains("CP")) {
                 JSONObject rowObj2 = new JSONObject();
@@ -381,6 +382,7 @@ public class Main {
             map.put("所在表格", tablePreName +  date + "-" + tableIndex);
             map.put("平台渠道", String.valueOf(sku.get("platform")));
             map.put("店铺账号", String.valueOf(sku.get("account")));
+            map.put("付款时间", String.valueOf(sku.get("paytime")));
             styles.put(key, map);
         }
 
@@ -837,17 +839,18 @@ public class Main {
         Sheet sheet2 = workbook.createSheet("订单号+衣服种类");
         Row row2 = sheet2.createRow(0);
         row2.createCell(0).setCellValue("所在表格");
-        row2.createCell(1).setCellValue("平台渠道");
-        row2.createCell(2).setCellValue("店铺账号");
-        row2.createCell(3).setCellValue("订单号");
-        row2.createCell(4).setCellValue("运单号");
-        row2.createCell(5).setCellValue("T恤数量");
-        row2.createCell(6).setCellValue("双面数量");
-        row2.createCell(7).setCellValue("童装数量");
-        row2.createCell(8).setCellValue("短款T恤数量");
-        row2.createCell(9).setCellValue("卫衣数量");
-        row2.createCell(10).setCellValue("聚酯纤维数量");
-        row2.createCell(11).setCellValue("成品数量");
+        row2.createCell(1).setCellValue("付款时间");
+        row2.createCell(2).setCellValue("平台渠道");
+        row2.createCell(3).setCellValue("店铺账号");
+        row2.createCell(4).setCellValue("订单号");
+        row2.createCell(5).setCellValue("运单号");
+        row2.createCell(6).setCellValue("T恤数量");
+        row2.createCell(7).setCellValue("双面数量");
+        row2.createCell(8).setCellValue("童装数量");
+        row2.createCell(9).setCellValue("短款T恤数量");
+        row2.createCell(10).setCellValue("卫衣数量");
+        row2.createCell(11).setCellValue("聚酯纤维数量");
+        row2.createCell(12).setCellValue("成品数量");
         List<String> cpNamelist = new ArrayList<>(cpNameSet);
         Collections.sort(cpNamelist, new Comparator<String>() {
             @Override
@@ -866,19 +869,20 @@ public class Main {
             Row row21 = sheet2.createRow(sheetRowCount);
             Map<String, String> tempMap = stylesMap.get(key);
             row21.createCell(0).setCellValue(tempMap.get("所在表格"));
-            row21.createCell(1).setCellValue(tempMap.get("平台渠道"));
-            row21.createCell(2).setCellValue(tempMap.get("店铺账号"));
-            row21.createCell(3).setCellValue(key);
-            row21.createCell(4).setCellValue(tempMap.get("运单号"));
-            row21.createCell(5).setCellValue(tempMap.get("T恤数量"));
-            row21.createCell(6).setCellValue(tempMap.get("双面数量"));
-            row21.createCell(7).setCellValue(tempMap.get("童装数量"));
-            row21.createCell(8).setCellValue(tempMap.get("短款T恤数量"));
-            row21.createCell(9).setCellValue(tempMap.get("卫衣数量"));
-            row21.createCell(10).setCellValue(tempMap.get("聚酯纤维数量"));
-            row21.createCell(11).setCellValue(tempMap.get("成品数量"));
+            row21.createCell(1).setCellValue(tempMap.get("付款时间"));
+            row21.createCell(2).setCellValue(tempMap.get("平台渠道"));
+            row21.createCell(3).setCellValue(tempMap.get("店铺账号"));
+            row21.createCell(4).setCellValue(key);
+            row21.createCell(5).setCellValue(tempMap.get("运单号"));
+            row21.createCell(6).setCellValue(tempMap.get("T恤数量"));
+            row21.createCell(7).setCellValue(tempMap.get("双面数量"));
+            row21.createCell(8).setCellValue(tempMap.get("童装数量"));
+            row21.createCell(9).setCellValue(tempMap.get("短款T恤数量"));
+            row21.createCell(10).setCellValue(tempMap.get("卫衣数量"));
+            row21.createCell(11).setCellValue(tempMap.get("聚酯纤维数量"));
+            row21.createCell(12).setCellValue(tempMap.get("成品数量"));
             for (int i = 0; i < cpNamelist.size(); i++) {
-                int index = i + 12;
+                int index = i + 13;
                 row21.createCell(index).setCellValue(tempMap.get(cpNamelist.get(i)) == null ? "0" : tempMap.get(cpNamelist.get(i)));
             }
 
