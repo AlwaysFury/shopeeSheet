@@ -163,8 +163,10 @@ public class Main {
         List<Object> tempList;
         for (int i = 0; i < allList.size(); i++) {
             list = allList.get(i);
+            if (list.size() == 0) continue;
 
             // 包含+号的拆分
+            System.out.println(list.get(2));
             String sku = String.valueOf(list.get(2));
             String[] skus = sku.split("\\+");
             int count = (int) list.get(3);
@@ -357,7 +359,6 @@ public class Main {
             imgRow.set("id", tablePreName + date + "-" + (tableIndex + inputTableIndex) + "-" + (i + 1) );
 
             System.out.println("====开启搜图任务：" + imgRow.getStr("id"));
-            System.out.println(imgRow.get("styleId"));
 //            new Thread(() -> renameAndCopyImages(staticSourceImgFile, subFolder, imgRow.getStr("styleId"), imgRow.getStr("id"))).start();
 //            new Thread(() -> renameAndCopyImages(staticSourceImgFile, subFolder, imgRow, tableName)).start();
             renameAndCopyImages(subFolder, imgRow, tableName);
@@ -649,21 +650,41 @@ public class Main {
             double width = originalImage.getWidth();
             double height = originalImage.getHeight();
             String model = String.valueOf(rowObj.get("model"));
+            String platForm = String.valueOf(rowObj.get("platform"));
             if (model.contains("พ่อ")) {
                 x = 10;
                 y = 70;
                 width = 160;
                 height = 160;
+                if (originalImage.getWidth() > 320 && originalImage.getHeight() > 320) {
+                    // 虾皮像素320为基础
+                    DecimalFormat df = new DecimalFormat("#.##");
+                    double multiple = Double.parseDouble(df.format((double) originalImage.getWidth() / 320));
+                    x = x * multiple;
+                    y = y * multiple;
+                    width = width * multiple;
+                    height = height * multiple;
+                }
 
             } else if (model.contains("แม่")) {
                 x = 160;
                 y = 70;
                 width = 160;
                 height = 160;
+                if (originalImage.getWidth() > 320 && originalImage.getHeight() > 320) {
+                    // 虾皮像素320为基础
+                    DecimalFormat df = new DecimalFormat("#.##");
+                    double multiple = Double.parseDouble(df.format((double) originalImage.getWidth() / 320));
+                    x = x * multiple;
+                    y = y * multiple;
+                    width = width * multiple;
+                    height = height * multiple;
+                }
+
             }
 
+            // 如果计算超过原有尺寸
             if (x + width > originalImage.getWidth() || y + height > originalImage.getHeight()) {
-                double result = (double) originalImage.getWidth() / 320;
                 DecimalFormat df = new DecimalFormat("#.##");
                 double multiple = Double.parseDouble(df.format((double) originalImage.getWidth() / 320));
                 x = x * multiple;
